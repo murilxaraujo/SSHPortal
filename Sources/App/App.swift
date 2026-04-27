@@ -2,6 +2,7 @@ import Hummingbird
 import AsyncHTTPClient
 import Logging
 import Foundation
+import ServiceLifecycle
 
 @main
 struct AppMain {
@@ -27,12 +28,18 @@ struct AppMain {
 
         let store = KeyStore.empty()
         let app = try ServerBuilder.makeApp(config: config, keyStore: store, loader: loader)
+
+        let serviceGroup = ServiceGroup(
+            services: [app],
+            gracefulShutdownSignals: [.sigterm, .sigint],
+            logger: logger
+        )
         do {
-            try await app.runService()
-            try await httpClient.shutdown()
+            try await serviceGroup.run()
         } catch {
             try? await httpClient.shutdown()
             throw error
         }
+        try await httpClient.shutdown()
     }
 }

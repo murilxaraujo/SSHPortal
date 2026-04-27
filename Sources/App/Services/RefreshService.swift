@@ -19,20 +19,29 @@ public struct RefreshService: Service {
         await store.refreshOnce(using: loader)
         let initialCount = await store.count()
         logger.info("initial keys loaded: \(initialCount)")
-        guard intervalSeconds > 0 else {
-            try await gracefulShutdown()
-            return
-        }
-        while !Task.isCancelled {
-            do {
-                try await Task.sleep(for: .seconds(intervalSeconds))
-            } catch {
-                break
+
+        let workTask = Task { [store, loader, intervalSeconds, logger] in
+            guard intervalSeconds > 0 else {
+                try? await Task.sleep(for: .seconds(60 * 60 * 24 * 365))
+                return
             }
-            if Task.isCancelled { break }
-            await store.refreshOnce(using: loader)
-            let count = await store.count()
-            logger.info("keys refreshed: \(count)")
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(for: .seconds(intervalSeconds))
+                } catch {
+                    return
+                }
+                if Task.isCancelled { return }
+                await store.refreshOnce(using: loader)
+                let count = await store.count()
+                logger.info("keys refreshed: \(count)")
+            }
+        }
+
+        await withGracefulShutdownHandler {
+            await workTask.value
+        } onGracefulShutdown: {
+            workTask.cancel()
         }
     }
 }
