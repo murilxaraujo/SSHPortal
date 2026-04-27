@@ -14,4 +14,25 @@ import Testing
             }
         }
     }
+
+    @Test func keysEndpointReturnsPlainText() async throws {
+        let key = SSHKey(
+            type: .ed25519,
+            publicKey: "ssh-ed25519 AAAA test@example",
+            comment: "test",
+            source: .manual,
+            fingerprint: "SHA256:abc"
+        )
+        let store = KeyStore(initialKeys: [key])
+        let app = try ServerBuilder.makeApp(config: .testDefault, keyStore: store)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/keys", method: .get) { response in
+                #expect(response.status == .ok)
+                let ct = response.headers[.contentType] ?? ""
+                #expect(ct.hasPrefix("text/plain"))
+                let body = String(buffer: response.body)
+                #expect(body == "ssh-ed25519 AAAA test@example\n")
+            }
+        }
+    }
 }

@@ -15,5 +15,18 @@ public enum KeyRoutes {
             let iso = last.map { ISO8601DateFormatter().string(from: $0) }
             return HealthResponse(status: "ok", keys_loaded: count, last_refresh: iso)
         }
+
+        router.get("/keys") { _, _ -> Response in
+            let keys = await store.all()
+            let body = keys.map(\.publicKey).joined(separator: "\n") + (keys.isEmpty ? "" : "\n")
+            var headers = HTTPFields()
+            headers[.contentType] = "text/plain; charset=utf-8"
+            headers[.cacheControl] = "no-store"
+            return Response(
+                status: .ok,
+                headers: headers,
+                body: ResponseBody(byteBuffer: .init(string: body))
+            )
+        }
     }
 }
