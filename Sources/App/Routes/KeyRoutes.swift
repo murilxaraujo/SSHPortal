@@ -18,15 +18,34 @@ public enum KeyRoutes {
 
         router.get("/keys") { _, _ -> Response in
             let keys = await store.all()
-            let body = keys.map(\.publicKey).joined(separator: "\n") + (keys.isEmpty ? "" : "\n")
-            var headers = HTTPFields()
-            headers[.contentType] = "text/plain; charset=utf-8"
-            headers[.cacheControl] = "no-store"
-            return Response(
-                status: .ok,
-                headers: headers,
-                body: ResponseBody(byteBuffer: .init(string: body))
-            )
+            return plainTextResponse(keys: keys)
         }
+
+        router.get("/keys/:type") { request, context -> Response in
+            let raw = context.parameters.get("type") ?? ""
+            guard let type = SSHKeyType(rawValue: raw) else {
+                var headers = HTTPFields()
+                headers[.contentType] = "text/plain; charset=utf-8"
+                return Response(
+                    status: .notFound,
+                    headers: headers,
+                    body: ResponseBody(byteBuffer: .init(string: "unknown key type\n"))
+                )
+            }
+            let keys = await store.filtered(by: type)
+            return plainTextResponse(keys: keys)
+        }
+    }
+
+    static func plainTextResponse(keys: [SSHKey]) -> Response {
+        let body = keys.map(\.publicKey).joined(separator: "\n") + (keys.isEmpty ? "" : "\n")
+        var headers = HTTPFields()
+        headers[.contentType] = "text/plain; charset=utf-8"
+        headers[.cacheControl] = "no-store"
+        return Response(
+            status: .ok,
+            headers: headers,
+            body: ResponseBody(byteBuffer: .init(string: body))
+        )
     }
 }
