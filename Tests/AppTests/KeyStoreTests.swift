@@ -51,4 +51,25 @@ import Foundation
         #expect(result[1].source == .manual)
         #expect(result[2].source == .github)
     }
+
+    @Test func loaderMergesManualAndRemote() async throws {
+        let yaml = """
+        title: t
+        sources:
+          github:
+            - alice
+          gitlab: []
+          manual:
+            - comment: Local
+              key: "ssh-ed25519 LOCALKEY local@host"
+        """
+        let file = try KeysFile.parse(yaml)
+        let stubGH = StubFetcher(source: .github, body: "ssh-ed25519 GHKEY alice@gh\nssh-rsa GHRSA alice@gh\n")
+        let stubGL = StubFetcher(source: .gitlab, body: "")
+        let loader = KeyLoader(file: file, github: stubGH, gitlab: stubGL)
+        let keys = try await loader.loadAll()
+        #expect(keys.count == 3)
+        #expect(keys.contains { $0.publicKey.contains("LOCALKEY") })
+        #expect(keys.contains { $0.publicKey.contains("GHKEY") })
+    }
 }
