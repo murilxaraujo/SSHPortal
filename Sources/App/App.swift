@@ -8,7 +8,7 @@ import ServiceLifecycle
 struct AppMain {
     static func main() async throws {
         let env = ProcessInfo.processInfo.environment
-        let config = Config.fromEnvironment(env: env)
+        var config = Config.fromEnvironment(env: env)
         var logger = Logger(label: "sshportal")
         logger.logLevel = Logger.Level(rawValue: config.logLevel) ?? .info
 
@@ -18,6 +18,10 @@ struct AppMain {
         } catch {
             logger.warning("could not load \(config.keysFile): \(error). Starting with empty config.")
             file = KeysFile(title: nil, sources: .init())
+        }
+
+        if env["TITLE"] == nil, let yamlTitle = file.title, !yamlTitle.isEmpty {
+            config.title = yamlTitle
         }
 
         let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
