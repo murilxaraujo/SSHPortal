@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+Package.resolved.bak
+*.xcodeproj/
+.DS_Store
+*.log
+config/keys.test.yaml
