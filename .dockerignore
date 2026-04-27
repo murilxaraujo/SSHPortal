@@ -3,6 +3,5 @@
 .github
 .swiftpm
 docs
-Tests
 config/keys.test.yaml
 *.md

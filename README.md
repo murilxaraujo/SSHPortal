@@ -4,6 +4,20 @@ Self-hosted SSH public key distribution portal. Visit a single URL, copy a one-l
 
 ## Quickstart
 
+Using Apple's [`container`](https://github.com/apple/container) framework on macOS:
+
+```bash
+container system start
+container run -d --name sshportal \
+  -p 8080:8080 \
+  -v "$PWD/keys.yaml:/config/keys.yaml:ro" \
+  -e BASE_URL=https://keys.example.com \
+  -e TITLE=yourhandle \
+  ghcr.io/murilxaraujo/sshportal:latest
+```
+
+Or with Docker (Linux):
+
 ```bash
 docker run -d --name sshportal \
   -p 8080:8080 \
@@ -83,14 +97,25 @@ swift test
 KEYS_FILE=config/keys.example.yaml swift run App
 ```
 
-Local container build (macOS, no Docker daemon needed):
+Local container build using Apple's [`container`](https://github.com/apple/container) framework (macOS, no Docker daemon needed):
+
+```bash
+container system start
+container build -t sshportal:dev .
+container run --rm -p 8080:8080 \
+  -v "$PWD/config/keys.example.yaml:/config/keys.yaml:ro" \
+  -e BASE_URL=http://localhost:8080 -e TITLE=demo \
+  sshportal:dev
+```
+
+Or via the Swift Container Plugin:
 
 ```bash
 swift package --allow-network-connections all build-container-image \
   --repository ghcr.io/murilxaraujo/sshportal --tag dev
 ```
 
-Or via Docker on Linux:
+Docker is also supported on Linux:
 
 ```bash
 docker build -t sshportal:dev .

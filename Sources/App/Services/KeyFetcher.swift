@@ -1,7 +1,6 @@
 import Foundation
 import AsyncHTTPClient
 import NIOCore
-import NIOFoundationCompat
 import Logging
 
 public protocol KeyFetcher: Sendable {
