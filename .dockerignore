@@ -1,0 +1,8 @@
+.build
+.git
+.github
+.swiftpm
+docs
+Tests
+config/keys.test.yaml
+*.md
