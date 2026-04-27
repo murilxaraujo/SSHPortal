@@ -15,6 +15,27 @@ import Testing
         }
     }
 
+    @Test func indexPageRendersTitleAndKeyCount() async throws {
+        let key = try SSHKey.parse("ssh-ed25519 AAAA test", source: .manual)
+        let store = KeyStore(initialKeys: [key])
+        var cfg = Config.testDefault
+        cfg.title = "murilxaraujo"
+        cfg.baseURL = "https://keys.example.com"
+        let app = try ServerBuilder.makeApp(config: cfg, keyStore: store)
+        try await app.test(.router) { client in
+            try await client.execute(uri: "/", method: .get) { response in
+                #expect(response.status == .ok)
+                let ct = response.headers[.contentType] ?? ""
+                #expect(ct.hasPrefix("text/html"))
+                let body = String(buffer: response.body)
+                #expect(body.contains("murilxaraujo"))
+                #expect(body.contains("https://keys.example.com/keys"))
+                #expect(body.contains("ED25519"))
+                #expect(body.contains("data-type=\"ed25519\""))
+            }
+        }
+    }
+
     @Test func keysFilteredByTypeReturnsSubset() async throws {
         let a = try SSHKey.parse("ssh-ed25519 AAAA a", source: .manual)
         let b = try SSHKey.parse("ssh-rsa BBBB b", source: .manual)

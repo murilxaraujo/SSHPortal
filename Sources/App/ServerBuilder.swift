@@ -13,6 +13,7 @@ public enum ServerBuilder {
 
         let router = Router()
         KeyRoutes.register(router, store: keyStore)
+        WebRoutes.register(router, store: keyStore, config: config)
 
         var services: [any Service] = []
         if let loader {
