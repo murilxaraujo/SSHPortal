@@ -52,6 +52,20 @@ import Foundation
         #expect(result[2].source == .github)
     }
 
+    @Test func refreshOnceCallsLoader() async throws {
+        let file = try KeysFile.parse("title: t\nsources:\n  manual:\n    - key: \"ssh-ed25519 AAAA m\"")
+        let loader = KeyLoader(
+            file: file,
+            github: StubFetcher(source: .github, body: ""),
+            gitlab: StubFetcher(source: .gitlab, body: "")
+        )
+        let store = KeyStore.empty()
+        await store.refreshOnce(using: loader)
+        let keys = await store.all()
+        #expect(keys.count == 1)
+        #expect(await store.lastRefresh != nil)
+    }
+
     @Test func loaderMergesManualAndRemote() async throws {
         let yaml = """
         title: t

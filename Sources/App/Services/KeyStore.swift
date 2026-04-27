@@ -20,6 +20,15 @@ public actor KeyStore {
         lastRefresh = Date()
     }
 
+    public func refreshOnce(using loader: KeyLoader) async {
+        do {
+            let loaded = try await loader.loadAll()
+            replaceAll(loaded)
+        } catch {
+            // loader.loadAll currently doesn't throw, but defensive.
+        }
+    }
+
     static func merge(_ input: [SSHKey]) -> [SSHKey] {
         let sourcePriority: (KeySource) -> Int = {
             switch $0 {
