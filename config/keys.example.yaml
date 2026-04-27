@@ -1,0 +1,13 @@
+title: "your-handle"
+
+sources:
+  github:
+    - your-github-username
+
+  gitlab:
+    - your-gitlab-username
+
+  manual:
+    - comment: "Work laptop"
+      type: ed25519
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... user@host"

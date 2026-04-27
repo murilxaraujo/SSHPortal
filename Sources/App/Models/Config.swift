@@ -1,4 +1,5 @@
 import Foundation
+import Yams
 
 public struct Config: Sendable {
     public var host: String
@@ -40,4 +41,74 @@ public struct Config: Sendable {
         logLevel: "info",
         keysFile: ""
     )
+
+    public static func fromEnvironment(env: [String: String]) -> Config {
+        Config(
+            host: env["HOST"] ?? "0.0.0.0",
+            port: env["PORT"].flatMap(Int.init) ?? 8080,
+            baseURL: env["BASE_URL"] ?? "http://localhost:8080",
+            title: env["TITLE"] ?? "sshportal",
+            themeColor: env["THEME_COLOR"] ?? "#00FF41",
+            refreshInterval: env["REFRESH_INTERVAL"].flatMap(Int.init) ?? 3600,
+            logLevel: env["LOG_LEVEL"] ?? "info",
+            keysFile: env["KEYS_FILE"] ?? "/config/keys.yaml"
+        )
+    }
+}
+
+public struct KeysFile: Sendable, Codable {
+    public struct ManualEntry: Sendable, Codable {
+        public var comment: String?
+        public var type: String?
+        public var key: String
+
+        public init(comment: String? = nil, type: String? = nil, key: String) {
+            self.comment = comment
+            self.type = type
+            self.key = key
+        }
+    }
+
+    public struct Sources: Sendable, Codable {
+        public var github: [String]
+        public var gitlab: [String]
+        public var manual: [ManualEntry]
+
+        public init(github: [String] = [], gitlab: [String] = [], manual: [ManualEntry] = []) {
+            self.github = github
+            self.gitlab = gitlab
+            self.manual = manual
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            self.github = (try? c.decode([String].self, forKey: .github)) ?? []
+            self.gitlab = (try? c.decode([String].self, forKey: .gitlab)) ?? []
+            self.manual = (try? c.decode([ManualEntry].self, forKey: .manual)) ?? []
+        }
+
+        enum CodingKeys: String, CodingKey { case github, gitlab, manual }
+    }
+
+    public var title: String?
+    public var sources: Sources
+
+    public init(title: String? = nil, sources: Sources = .init()) {
+        self.title = title
+        self.sources = sources
+    }
+
+    public static func parse(_ yaml: String) throws -> KeysFile {
+        let decoder = YAMLDecoder()
+        return try decoder.decode(KeysFile.self, from: yaml)
+    }
+
+    public static func load(path: String) throws -> KeysFile {
+        let url = URL(fileURLWithPath: path)
+        let data = try Data(contentsOf: url)
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw NSError(domain: "KeysFile", code: 1, userInfo: [NSLocalizedDescriptionKey: "non-utf8 yaml"])
+        }
+        return try parse(text)
+    }
 }
