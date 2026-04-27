@@ -1,6 +1,11 @@
 import Foundation
 import Crypto
 
+/// The wire-format prefix that distinguishes one SSH public key family from another.
+///
+/// Used both for grouping in the UI and for filtering on `GET /keys/:type`.
+/// The raw values match the canonical OpenSSH names users type into the URL
+/// (`ed25519`, `rsa`, `ecdsa`, `ecdsa-sk`, `ed25519-sk`).
 public enum SSHKeyType: String, Sendable, CaseIterable, Codable {
     case ed25519
     case rsa
@@ -31,17 +36,33 @@ public enum SSHKeyType: String, Sendable, CaseIterable, Codable {
     }
 }
 
+/// Where a key was originally loaded from.
+///
+/// Source priority during deduplication is `manual` > `github` > `gitlab`:
+/// when two sources contribute the same fingerprint, the higher-priority
+/// entry wins and its comment is preserved.
 public enum KeySource: String, Sendable, Codable {
     case github
     case gitlab
     case manual
 }
 
+/// A normalized representation of one OpenSSH public key, ready to render
+/// or to write into `~/.ssh/authorized_keys`.
+///
+/// `publicKey` is always the trimmed `<type> <base64-blob> [<comment>]`
+/// line. `fingerprint` is the SHA-256 of the decoded blob, encoded as
+/// `SHA256:<base64-no-padding>` — identical to `ssh-keygen -lf`.
 public struct SSHKey: Sendable, Hashable, Codable {
+    /// Detected key family.
     public let type: SSHKeyType
+    /// Original key line, trimmed.
     public let publicKey: String
+    /// Comment field after the blob, if any.
     public let comment: String?
+    /// Where this key was loaded from.
     public let source: KeySource
+    /// SHA-256 fingerprint, format `SHA256:<base64>`.
     public let fingerprint: String
 
     public init(type: SSHKeyType, publicKey: String, comment: String?, source: KeySource, fingerprint: String) {

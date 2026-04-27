@@ -1,5 +1,11 @@
 import Foundation
 
+/// In-memory cache of currently-served keys.
+///
+/// `KeyStore` is the only mutable state in the process. ``RefreshService``
+/// is the sole writer (via ``replaceAll(_:)``); HTTP handlers read with
+/// ``all()``, ``filtered(by:)``, and ``count()``. Deduplication and
+/// source-priority ordering happen inside ``replaceAll(_:)``.
 public actor KeyStore {
     private var keys: [SSHKey]
     public private(set) var lastRefresh: Date?

@@ -1,6 +1,11 @@
 import Foundation
 import Yams
 
+/// Runtime configuration for SSHPortal.
+///
+/// Built from the process environment via ``fromEnvironment(env:)``.
+/// Environment overrides defaults; a non-empty `keys.yaml` `title:` can
+/// further override the default title (env still wins).
 public struct Config: Sendable {
     public var host: String
     public var port: Int
@@ -56,6 +61,8 @@ public struct Config: Sendable {
     }
 }
 
+/// On-disk schema for `keys.yaml` — a list of remote usernames plus an
+/// optional list of inline manual keys.
 public struct KeysFile: Sendable, Codable {
     public struct ManualEntry: Sendable, Codable {
         public var comment: String?

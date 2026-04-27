@@ -1,6 +1,13 @@
 import Foundation
 import Logging
 
+/// Combines manual keys from `keys.yaml` with remote ``KeyFetcher``
+/// results into a single flat list.
+///
+/// The result is intentionally unsorted and may contain duplicates — that
+/// work is delegated to ``KeyStore``'s `replaceAll`. Failure of any one
+/// remote source is logged at warning level; the loader continues with
+/// whatever else succeeded.
 public struct KeyLoader: Sendable {
     public let file: KeysFile
     public let github: any KeyFetcher

@@ -3,10 +3,22 @@ import AsyncHTTPClient
 import NIOCore
 import Logging
 
+/// Anything that can return SSH keys for a given username.
+///
+/// Two implementations exist: ``RemoteKeyFetcher`` (HTTP against
+/// `github.com` or `gitlab.com`) and an internal `StubFetcher` used in
+/// tests. Adding a new provider is a matter of writing a new conformer
+/// and wiring it into ``KeyLoader``.
 public protocol KeyFetcher: Sendable {
+    /// Returns the parsed keys published by `username` at this fetcher's
+    /// source. Malformed lines are skipped with a warning.
     func fetch(username: String) async throws -> [SSHKey]
 }
 
+/// Fetches keys from a `<base>/<username>.keys` URL.
+///
+/// Used for both GitHub (`https://github.com`) and GitLab
+/// (`https://gitlab.com`) — they expose the same endpoint shape.
 public struct RemoteKeyFetcher: KeyFetcher {
     public let source: KeySource
     public let baseURL: String

@@ -1,6 +1,7 @@
 import Hummingbird
 import Foundation
 
+/// Server-rendered HTML routes — currently just `GET /`.
 public enum WebRoutes {
     public static func register(_ router: Router<some RequestContext>, store: KeyStore, config: Config) {
         router.get("/") { _, _ -> Response in

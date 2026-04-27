@@ -1,0 +1,61 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build DocC archive
+        run: |
+          swift package \
+            --allow-writing-to-directory ./_site \
+            generate-documentation \
+            --target App \
+            --disable-indexing \
+            --transform-for-static-hosting \
+            --hosting-base-path SSHPortal \
+            --output-path ./_site
+      - name: Add redirect from / to documentation root
+        run: |
+          cat > ./_site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>SSHPortal Documentation</title>
+            <meta http-equiv="refresh" content="0; url=./documentation/app/">
+            <link rel="canonical" href="./documentation/app/">
+          </head>
+          <body>
+            <p>Redirecting to <a href="./documentation/app/">SSHPortal documentation</a>…</p>
+          </body>
+          </html>
+          HTML
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

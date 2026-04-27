@@ -2,6 +2,11 @@ import Foundation
 import Hummingbird
 import HTTPTypes
 
+/// Per-IP token-bucket rate limiter.
+///
+/// Each IP address gets its own bucket of `perMinute` tokens that refills
+/// continuously at `perMinute / 60` tokens per second. ``allow(ip:)``
+/// returns `false` once the bucket is empty.
 public actor TokenBucketRateLimiter {
     private struct Bucket {
         var tokens: Double
@@ -35,6 +40,9 @@ public actor TokenBucketRateLimiter {
     }
 }
 
+/// Hummingbird middleware that gates incoming requests through a
+/// ``TokenBucketRateLimiter``, keyed by the first hop in
+/// `X-Forwarded-For` (or the literal string `unknown` if absent).
 public struct RateLimitMiddleware<Context: RequestContext>: RouterMiddleware {
     public let limiter: TokenBucketRateLimiter
 

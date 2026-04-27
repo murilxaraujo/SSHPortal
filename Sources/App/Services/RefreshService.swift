@@ -2,6 +2,12 @@ import Foundation
 import ServiceLifecycle
 import Logging
 
+/// Background service that periodically reloads keys into ``KeyStore``.
+///
+/// Runs an initial load on startup, then sleeps for `intervalSeconds`
+/// between refreshes. Responds to ServiceLifecycle's graceful shutdown
+/// signal via `withGracefulShutdownHandler`, so SIGINT/SIGTERM ends the
+/// loop cleanly.
 public struct RefreshService: Service {
     public let store: KeyStore
     public let loader: KeyLoader

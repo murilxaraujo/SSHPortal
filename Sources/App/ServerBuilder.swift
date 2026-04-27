@@ -2,6 +2,11 @@ import Hummingbird
 import Logging
 import ServiceLifecycle
 
+/// Pure factory that wires a ``Config`` and a ``KeyStore`` (plus an
+/// optional ``KeyLoader``) into a ready-to-run Hummingbird application.
+///
+/// All side effects live in ``App``; this enum is fully testable and is
+/// what the test suite uses to spin up an in-memory server per case.
 public enum ServerBuilder {
     public static func makeApp(
         config: Config,

@@ -4,4 +4,7 @@ Package.resolved.bak
 *.xcodeproj/
 .DS_Store
 *.log
+.vscode/
+_site/
+_docs-test/
 config/keys.test.yaml

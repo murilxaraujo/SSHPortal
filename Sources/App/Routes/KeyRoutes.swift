@@ -1,12 +1,18 @@
 import Hummingbird
 import Foundation
 
+/// JSON body of `GET /health`. Stable contract — orchestrators rely on
+/// `status == "ok"` for liveness.
 public struct HealthResponse: ResponseEncodable, Codable {
     public let status: String
     public let keys_loaded: Int
     public let last_refresh: String?
 }
 
+/// Plain-text key endpoints plus `/health`.
+///
+/// Routes are registered onto an existing `Router` via ``register(_:store:)``
+/// so that callers control middleware order.
 public enum KeyRoutes {
     public static func register(_ router: Router<some RequestContext>, store: KeyStore) {
         router.get("/health") { _, _ -> HealthResponse in
