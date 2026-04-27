@@ -12,6 +12,8 @@ public enum ServerBuilder {
         logger.logLevel = Logger.Level(rawValue: config.logLevel) ?? .info
 
         let router = Router()
+        let limiter = TokenBucketRateLimiter(perMinute: 60)
+        router.middlewares.add(RateLimitMiddleware<BasicRequestContext>(limiter: limiter))
         KeyRoutes.register(router, store: keyStore)
         WebRoutes.register(router, store: keyStore, config: config)
 
